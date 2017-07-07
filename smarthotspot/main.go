@@ -40,10 +40,12 @@ func main() {
 			case "started":
 				// hostapd started
 				// Start the webserver
+				log.Infof("Starting webserver")
 				StartWebServer(wifiManager)
 			case "stopped":
 				// hostapd stopped
 				// Stop the webserver
+				log.Infof("Stopping webserver")
 				StopWebServer()
 			default:
 				log.Errorf("Unknown hostapd message: %v", message)
@@ -63,13 +65,10 @@ func main() {
 		}
 	}()
 
-	// Run smarthotspot in a goroutine
-	go func() {
-		if err := smartHotspot.Start(); err != nil {
-			log.Errorf("Error in smart-hotspot: %v", err)
-			os.Exit(-1)
-		}
-	}()
+	if err := smartHotspot.Start(); err != nil {
+		log.Errorf("Error in smart-hotspot: %v", err)
+		os.Exit(-1)
+	}
 }
 
 var snl *stoppablenetlistener.StoppableNetListener
