@@ -1,0 +1,10 @@
+!.gitignore
+
+.*.sw*
+*.so
+*.o
+*.a
+
+*.test
+
+# Programs
