@@ -1,0 +1,36 @@
+<script src="/static/js/wifi.js"></script>
+
+<div class="row" style="height: 50%; margin-top: 5em;">
+	<div class="col s6">
+		<div class="row">
+			<div class="input-field col s3">
+				<input id="wifi-ssid" placeholder="Enter your Wi-Fi SSID here" type="text">
+				<label class="active" for="wifi-ssid">Wi-Fi SSID</label>
+			</div>
+		</div>
+
+		<div class="row">
+			<div class="input-field col s3">
+				<input id="wifi-password" placeholder="Wi-Fi password" type="text">
+				<label class="active" for="wifi-password">Password</label>
+			</div>
+		</div>
+
+		<div class="row">
+			<div class="col s1">
+				<a id="wifi-connect" class="waves-effect waves-light btn">Connect</a>
+			</div>
+		</div>
+	</div>
+
+	<div class="col s6">
+		<div class="row">
+			<div class="col s4">
+				<div id="wifi-scan-results" class="collection disabled"></div>
+			</div>
+			<div class="col s1">
+				<a href="javascript:void(0);" class="button"><i id="wifi-scan-trigger" class="material-icons">sync</i></a>
+			</div>
+		</div>
+	</div>
+</div>
