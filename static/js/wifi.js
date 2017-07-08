@@ -20,7 +20,7 @@ window.onload = function() {
 socket.on('wifi-scan-results', function(msg) {
 	console.log("Received scan results")
 	function __addScanResult(entry) {
-		var html = '<a href="javascript:void(0);" class="collection-item" data-interface="' + entry.interface + '" data-data-ssid="' + entry.SSID + '">' + entry.SSID + '</a>';
+		var html = '<li class="collection-item" data-interface="' + entry.interface + '" data-data-ssid="' + entry.SSID + '">' + entry.SSID + '</li>';
 		var el = $($.parseHTML(html));
 		el.on('click', function(e) {
 			$('#wifi-ssid').val(entry.SSID);
