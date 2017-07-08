@@ -64,6 +64,7 @@ func (s *SmartHotspot) Start() error {
 		log.Debugln("Scanning for known SSIDs...")
 		if ssids, err = wm.ScanForKnownSSID(); err != nil {
 			log.Errorf("Failed to scan for known SSIDs: %v", err)
+		} else {
 			// Inform all scan-result listeners
 			informListeners(s.scanResultListeners, ssids)
 
