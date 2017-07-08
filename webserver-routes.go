@@ -15,6 +15,11 @@ import (
 
 var staticPath string
 
+func IndexHandler(w http.ResponseWriter, r *http.Request) {
+	filePath := filepath.Join(staticPath, "html", "index.html")
+	http.ServeFile(w, r, filePath)
+}
+
 func WifiHandler(w http.ResponseWriter, r *http.Request) {
 	filePath := filepath.Join(staticPath, "html", "wifi-configuration.html")
 	http.ServeFile(w, r, filePath)

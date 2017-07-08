@@ -1,36 +1,65 @@
-<script src="/static/js/wifi.js"></script>
+<html>
+	<head>
+		<link type="text/css" rel="stylesheet" href="/static/fonts/material-icons">
+		<link type="text/css" rel="stylesheet" href="/static/materialize/css/materialize.min.css">
+		<link type="text/css" rel="stylesheet" href="/static/css/main.css">
 
-<div class="row" style="height: 50%; margin-top: 5em;">
-	<div class="col s6">
-		<div class="row">
-			<div class="input-field col s3">
-				<input id="wifi-ssid" placeholder="Enter your Wi-Fi SSID here" type="text">
-				<label class="active" for="wifi-ssid">Wi-Fi SSID</label>
+		<script src="/static/js/jquery-2.1.1.min.js"></script>
+		<script src="/static/materialize/js/materialize.min.js"></script>
+		<script src="/static/js/socket.io.slim.min.js"></script>
+		<script src="/static/js/angular-1.6.1.min.js"></script>
+		<script src="/static/js/angular-route-1.6.1.min.js"></script>
+		<script src="/static/js/wifi.js"></script>
+	</head>
+
+	<body>
+		<div class="container">
+			<nav>
+				<div class="nav-wrapper">
+					<a href="#" class="brand-logo">SmartHotspot</a>
+					<a href="#" data-activates="mobile-nav" class="button-collapse"><i class="material-icons">menu</i></a>
+					<ul id="navbar-ul" class="hide-on-med-and-down right">
+					</ul>
+					<ul id="mobile-nav" class="side-nav" style="display: none;">
+					</ul>
+				</div>
+			</nav>
+
+
+			<div class="row" style="height: 50%; margin-top: 5em;">
+				<div class="col s6">
+					<div class="row">
+						<div class="input-field col s3">
+							<input id="wifi-ssid" placeholder="Enter your Wi-Fi SSID here" type="text">
+							<label class="active" for="wifi-ssid">Wi-Fi SSID</label>
+						</div>
+					</div>
+
+					<div class="row">
+						<div class="input-field col s3">
+							<input id="wifi-password" placeholder="Wi-Fi password" type="text">
+							<label class="active" for="wifi-password">Password</label>
+						</div>
+					</div>
+
+					<div class="row">
+						<div class="col s1">
+							<a id="wifi-connect" class="waves-effect waves-light btn">Connect</a>
+						</div>
+					</div>
+				</div>
+
+				<div class="col s6">
+					<div class="row">
+						<div class="col s4">
+							<div id="wifi-scan-results" class="collection disabled"></div>
+						</div>
+						<div class="col s1">
+							<a href="javascript:void(0);" class="button"><i id="wifi-scan-trigger" class="material-icons">sync</i></a>
+						</div>
+					</div>
+				</div>
 			</div>
 		</div>
-
-		<div class="row">
-			<div class="input-field col s3">
-				<input id="wifi-password" placeholder="Wi-Fi password" type="text">
-				<label class="active" for="wifi-password">Password</label>
-			</div>
-		</div>
-
-		<div class="row">
-			<div class="col s1">
-				<a id="wifi-connect" class="waves-effect waves-light btn">Connect</a>
-			</div>
-		</div>
-	</div>
-
-	<div class="col s6">
-		<div class="row">
-			<div class="col s4">
-				<div id="wifi-scan-results" class="collection disabled"></div>
-			</div>
-			<div class="col s1">
-				<a href="javascript:void(0);" class="button"><i id="wifi-scan-trigger" class="material-icons">sync</i></a>
-			</div>
-		</div>
-	</div>
-</div>
+	</body>
+</html>

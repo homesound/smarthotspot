@@ -1,3 +1,22 @@
+var socket;
+
+window.onload = function() {
+	$(".button-collapse").sideNav();
+
+
+	socket = io.connect();
+
+	// Check connectivity status
+	// If we're running hotspot, then we show the wi-fi page
+	socket.on('wifi-status', function(msg) {
+		var json = JSON.parse(msg);
+		if(json.hotspot) {
+		}
+	});
+
+	socket.emit('wifi-status');
+}
+
 socket.on('wifi-scan-results', function(msg) {
 	console.log("Received scan results")
 	function __addScanResult(entry) {

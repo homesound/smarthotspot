@@ -15,6 +15,8 @@ var (
 	app         = kingpin.New("smarthotspot", "Auto-host hotspot if no network found")
 	iface       = app.Arg("iface", "Interface to use").String()
 	wpaConfPath = app.Flag("wpa-conf", "Path to wpa_supplicant configuration file").Short('w').Default("/etc/wpa_supplicant/wpa_supplicant.conf").String()
+	serverPath  = app.Flag("server-path", "Path to webserver files").Short('s').Default("/www/smarthotspot").String()
+	port        = app.Flag("port", "Port to start webserver on").Short('p').Default("80").Int()
 )
 
 func main() {
@@ -41,7 +43,7 @@ func main() {
 				// hostapd started
 				// Start the webserver
 				log.Infof("Starting webserver")
-				StartWebServer(wifiManager)
+				StartWebServer(wifiManager, *port)
 			case "stopped":
 				// hostapd stopped
 				// Stop the webserver
@@ -73,12 +75,12 @@ func main() {
 
 var snl *stoppablenetlistener.StoppableNetListener
 
-func StartWebServer(wifiManager *wifimanager.WifiManager) {
+func StartWebServer(wifiManager *wifimanager.WifiManager, port int) {
 	// Set up the server
-	handler := smarthotspot.SetupRoutes("/www/smarthotspot", wifiManager, nil)
+	handler := smarthotspot.SetupRoutes(*serverPath, wifiManager, nil)
 	http.Handle("/", handler)
 	server := http.Server{}
-	snl, err := stoppablenetlistener.New(80)
+	snl, err := stoppablenetlistener.New(port)
 	if err != nil {
 		log.Fatalf("Failed to listen to port 80: %v", err)
 	}
