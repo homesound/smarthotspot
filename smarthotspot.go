@@ -59,11 +59,11 @@ func (s *SmartHotspot) Start() error {
 		log.Fatalf("Failed to bring wifi interface '%v' up: %v", iface, err)
 	}
 
-	log.Debugf("Known SSIDs=%v", wm.KnownSSIDs.List())
+	log.Infof("Known SSIDs=%v", wm.KnownSSIDs.List())
 
 	for {
 		wm.Lock()
-		log.Infof("Scanning for known SSIDs...")
+		log.Debugf("Scanning for known SSIDs...")
 		if ssids, err = wm.ScanForKnownSSID(); err != nil {
 			log.Errorf("Failed to scan for known SSIDs: %v", err)
 		} else {
