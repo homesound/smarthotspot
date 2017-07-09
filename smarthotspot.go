@@ -72,39 +72,48 @@ func (s *SmartHotspot) Start() error {
 
 			log.Debugf("Got known SSIDS: %v", ssids)
 			now := time.Now()
-			if len(ssids) > 0 && wm.IsHostapdRunning() {
-
-				// We found a known SSID and we're in hotspot mode.
-				// Get out of hotspot and start wpa_supplicant
-				log.Infoln("Found known SSIDs when hotspot is running. Disable hotspot and try to connect to SSID")
-				if err = wm.StopHotspot(iface); err != nil {
-					log.Errorf("Failed to stop hotspot: %v", err)
-				} else {
-					// Inform that hotspot has stopped
-					informListeners(s.hostapdListeners, "stopped")
-					log.Infof("Hotspot stopped")
+			if len(ssids) > 0 {
+				if wm.IsHostapdRunning() {
+					// We found a known SSID and we're in hotspot mode.
+					// Get out of hotspot and start wpa_supplicant
+					log.Infoln("Found known SSIDs when hotspot is running. Disable hotspot and try to connect to SSID")
+					if err = wm.StopHotspot(iface); err != nil {
+						log.Errorf("Failed to stop hotspot: %v", err)
+					} else {
+						// Inform that hotspot has stopped
+						informListeners(s.hostapdListeners, "stopped")
+						log.Infof("Hotspot stopped")
+					}
+				}
+				if !wm.IsWPASupplicantRunning() {
+					// We need to start wpa_supplicant
 					if err = wm.StartWPASupplicant(iface, wm.WPAConfPath); err != nil {
 						log.Errorf("Failed to start WPA supplicant: %v", err)
 					} else {
 						// Inform that wpa supplicant has started
 						informListeners(s.wpaSupplicantListeners, "started")
 						log.Infof("WPA supplicant started")
-						noKnownSSIDTimestamp = time.Now()
 					}
 				}
+				noKnownSSIDTimestamp = time.Now()
 			}
-			if len(ssids) == 0 && now.Sub(noKnownSSIDTimestamp) > 10*time.Second && !wm.IsHostapdRunning() {
+			if len(ssids) == 0 && now.Sub(noKnownSSIDTimestamp) > 10*time.Second {
 				log.Infoln("Scanning timed out. Starting hotspot")
-				if err = wm.StopWPASupplicant(iface); err != nil {
-					log.Errorf("Failed to stop WPA supplicant: %v", err)
-				} else {
-					// Inform that wpa supplicant has stopped
-					informListeners(s.wpaSupplicantListeners, "stopped")
+				if wm.IsWPASupplicantRunning() {
+					if err = wm.StopWPASupplicant(iface); err != nil {
+						log.Errorf("Failed to stop WPA supplicant: %v", err)
+					} else {
+						// Inform that wpa supplicant has stopped
+						informListeners(s.wpaSupplicantListeners, "stopped")
+					}
+				}
+				if !wm.IsHostapdRunning() {
 					if err = wm.StartHotspot(iface); err != nil {
 						log.Errorf("Failed to start hotspot: %v", err)
+					} else {
+						// Inform that hostapd has started
+						informListeners(s.hostapdListeners, "started")
 					}
-					// Inform that hostapd has started
-					informListeners(s.hostapdListeners, "started")
 				}
 			}
 		}
