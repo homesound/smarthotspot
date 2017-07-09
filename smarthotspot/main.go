@@ -17,10 +17,15 @@ var (
 	wpaConfPath = app.Flag("wpa-conf", "Path to wpa_supplicant configuration file").Short('w').Default("/etc/wpa_supplicant/wpa_supplicant.conf").String()
 	serverPath  = app.Flag("server-path", "Path to webserver files").Short('s').Default("/www/smarthotspot").String()
 	port        = app.Flag("port", "Port to start webserver on").Short('p').Default("80").Int()
+	verbose     = app.Flag("verbose", "Enable verbose messages").Short('v').Default("false").Bool()
 )
 
 func main() {
 	kingpin.MustParse(app.Parse(os.Args[1:]))
+
+	if *verbose {
+		log.SetLevel(log.DebugLevel)
+	}
 
 	wifiManager, err := wifimanager.New(*wpaConfPath)
 	if err != nil {
