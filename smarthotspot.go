@@ -98,7 +98,6 @@ func (s *SmartHotspot) Start() error {
 				noKnownSSIDTimestamp = time.Now()
 			}
 			if len(ssids) == 0 && now.Sub(noKnownSSIDTimestamp) > 10*time.Second {
-				log.Infoln("Scanning timed out. Starting hotspot")
 				if wm.IsWPASupplicantRunning() {
 					if err = wm.StopWPASupplicant(iface); err != nil {
 						log.Errorf("Failed to stop WPA supplicant: %v", err)
@@ -108,6 +107,7 @@ func (s *SmartHotspot) Start() error {
 					}
 				}
 				if !wm.IsHostapdRunning() {
+					log.Infoln("Scanning timed out. Starting hotspot")
 					if err = wm.StartHotspot(iface); err != nil {
 						log.Errorf("Failed to start hotspot: %v", err)
 					} else {
