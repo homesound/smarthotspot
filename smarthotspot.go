@@ -59,16 +59,18 @@ func (s *SmartHotspot) Start() error {
 		log.Fatalf("Failed to bring wifi interface '%v' up: %v", iface, err)
 	}
 
+	log.Debugf("Known SSIDs=%v", wm.KnownSSIDs.List())
+
 	for {
 		wm.Lock()
-		log.Debugln("Scanning for known SSIDs...")
+		log.Infof("Scanning for known SSIDs...")
 		if ssids, err = wm.ScanForKnownSSID(); err != nil {
 			log.Errorf("Failed to scan for known SSIDs: %v", err)
 		} else {
 			// Inform all scan-result listeners
 			informListeners(s.scanResultListeners, ssids)
 
-			log.Debugf("Known SSIDS: %v", ssids)
+			log.Debugf("Got known SSIDS: %v", ssids)
 			now := time.Now()
 			if len(ssids) > 0 && wm.IsHostapdRunning() {
 
@@ -80,13 +82,13 @@ func (s *SmartHotspot) Start() error {
 				} else {
 					// Inform that hotspot has stopped
 					informListeners(s.hostapdListeners, "stopped")
-					log.Debugln("Hotspot stopped")
+					log.Infof("Hotspot stopped")
 					if err = wm.StartWPASupplicant(iface, wm.WPAConfPath); err != nil {
 						log.Errorf("Failed to start WPA supplicant: %v", err)
 					} else {
 						// Inform that wpa supplicant has started
 						informListeners(s.wpaSupplicantListeners, "started")
-						log.Debugln("WPA supplicant started")
+						log.Infof("WPA supplicant started")
 						noKnownSSIDTimestamp = time.Now()
 					}
 				}
