@@ -15,6 +15,10 @@ import (
 )
 
 var (
+	BUILD_DATE string
+)
+
+var (
 	app         = kingpin.New("smarthotspot", "Auto-host hotspot if no network found")
 	iface       = app.Arg("iface", "Interface to use").String()
 	wpaConfPath = app.Flag("wpa-conf", "Path to wpa_supplicant configuration file").Short('w').Default("/etc/wpa_supplicant/wpa_supplicant.conf").String()
@@ -25,6 +29,7 @@ var (
 )
 
 func main() {
+	log.Infof("smarthotspot build %v", BUILD_DATE)
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
 	if *verbose {
