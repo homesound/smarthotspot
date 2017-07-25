@@ -85,36 +85,44 @@ func main() {
 									break
 								}
 							}
-							log.Infof("Waiting for wifi to be connected...")
+							log.Debugf("Waiting for wifi to be connected...")
 							time.Sleep(1 * time.Second)
 						}
-						log.Infof("Attempting to inform webserver: %v", *webserver)
-						// Wait for IP address
-						data := make(map[string]string)
-						hostname, err := nm.Hostname()
-						if err != nil {
-							log.Errorf("Failed to get hostname: %v", err)
-							return
+						success := false
+						start := time.Now()
+						for now := time.Now(); now.Sub(start) < 30*time.Second; {
+							log.Debugf("Attempting to inform webserver: %v", *webserver)
+							// Wait for IP address
+							data := make(map[string]string)
+							hostname, err := nm.Hostname()
+							if err != nil {
+								log.Errorf("Failed to get hostname: %v", err)
+								return
+							}
+							data["hostname"] = hostname
+							ip, err := nm.IPAddress(*iface)
+							if err != nil {
+								log.Errorf("Failed to get IP address for interface: %v: %v", *iface, err)
+								return
+							}
+							data["ip"] = ip
+							// Try to notify webserver
+							req := gorequest.New()
+							resp, body, errs := req.Post(*webserver).SendMap(data).End()
+							if (resp != nil && resp.StatusCode != 200) || len(errs) > 0 {
+								log.Errorf("Failed to POST data to webserver: %v (errs: %v)", body, errs)
+							} else if resp != nil && resp.StatusCode == 200 {
+								break
+							}
+							_ = resp
+							_ = body
+							_ = errs
 						}
-						data["hostname"] = hostname
-						ip, err := nm.IPAddress(*iface)
-						if err != nil {
-							log.Errorf("Failed to get IP address for interface: %v: %v", *iface, err)
-							return
-						}
-						data["ip"] = ip
-						// Try to notify webserver
-						req := gorequest.New()
-						resp, body, errs := req.Post(*webserver).SendMap(data).End()
-						if (resp != nil && resp.StatusCode != 200) || len(errs) > 0 {
-							log.Errorf("Failed to POST data to webserver: %v (errs: %v)", body, errs)
+						if !success {
 							// Force Hostapd since the POST failed
 							log.Infof("Forcing Hostapd since webserver notify failed")
 							smartHotspot.CommandChannel <- smarthotspot.FORCE_HOSTAPD
 						}
-						_ = resp
-						_ = body
-						_ = errs
 					}()
 				}
 			case "stopped":
