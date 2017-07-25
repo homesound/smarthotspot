@@ -43,95 +43,93 @@ func SetupRoutes(path string, wifiManager *wifimanager.WifiManager, io *socketio
 			log.Fatalf("Failed to start socket.io server: %v\n", err)
 		}
 	}
+	io.OnConnect("/", func(s socketio.Conn) error {
+		log.Debugf("Received connection")
+		s.SetContext("")
+		return nil
+	})
 
-	io.On("connection", func(so socketio.Socket) {
+	io.OnEvent("/", "wifi-scan", func(so socketio.Conn, msg string) {
+		log.Infoln("/wifi-scan")
+		ifaces, err := wifiManager.GetWifiInterfaces()
 		if err != nil {
-			log.Errorf("Failed to get wifi manager: %v", err)
+			log.Errorf("Failed to list wifi interfaces: %v\n", err)
 			return
 		}
 
-		so.On("wifi-scan", func(msg string) {
-			log.Infoln("/wifi-scan")
-			ifaces, err := wifiManager.GetWifiInterfaces()
+		type ifaceResult struct {
+			Interface   string                           `json:"interface"`
+			ScanResults []*networkmanager.WifiScanResult `json:"scanResults"`
+		}
+
+		results := make([]*ifaceResult, 0)
+		for _, iface := range ifaces {
+			scanResults, err := wifiManager.WifiScan(iface)
 			if err != nil {
-				log.Errorf("Failed to list wifi interfaces: %v\n", err)
+				log.Errorf("Failed to perform wifi-scan on interface '%v': %v\n", iface, err)
+				continue
+			}
+			res := &ifaceResult{iface, scanResults}
+			results = append(results, res)
+		}
+
+		b, err := json.Marshal(results)
+		if err != nil {
+			log.Errorf("Failed to marshal scan results: %v\n", err)
+		}
+		so.Emit("wifi-scan-results", string(b))
+		//fmt.Printf("Sending back results:\n%v\n", string(b))
+	})
+
+	io.OnEvent("/", "wifi-connect", func(so socketio.Conn, s string) {
+		log.Infoln("/wifi-connect")
+		type wifiCred struct {
+			SSID     string `json:"SSID"`
+			Password string `json:"password"`
+		}
+
+		var cred wifiCred
+		err := json.Unmarshal([]byte(s), &cred)
+		if err != nil {
+			log.Errorf("Failed to unmarshal data into wifiCred: %v\n%v\n", err, s)
+			return
+		}
+		wifiInterfaces, err := wifiManager.GetWifiInterfaces()
+		if err != nil {
+			log.Errorf("Failed to get wifi interfaces: %v", err)
+			return
+		}
+		log.Infof("Testing wifi connection with SSID=%v psk=%v", cred.SSID, cred.Password)
+		for _, iface := range wifiInterfaces {
+			networkStr, err := wifimanager.WPAPassphrase(cred.SSID, cred.Password)
+			if err != nil {
+				log.Errorf("Failed to call wpa_passphrase: %v", err)
 				return
 			}
-
-			type ifaceResult struct {
-				Interface   string                            `json:"interface"`
-				ScanResults []*networkmanager.WifiScanResult `json:"scanResults"`
-			}
-
-			results := make([]*ifaceResult, 0)
-			for _, iface := range ifaces {
-				scanResults, err := wifiManager.WifiScan(iface)
-				if err != nil {
-					log.Errorf("Failed to perform wifi-scan on interface '%v': %v\n", iface, err)
-					continue
-				}
-				res := &ifaceResult{iface, scanResults}
-				results = append(results, res)
-			}
-
-			b, err := json.Marshal(results)
-			if err != nil {
-				log.Errorf("Failed to marshal scan results: %v\n", err)
-			}
-			so.Emit("wifi-scan-results", string(b))
-			//fmt.Printf("Sending back results:\n%v\n", string(b))
-		})
-
-		so.On("wifi-connect", func(s string) {
-			log.Infoln("/wifi-connect")
-			type wifiCred struct {
-				SSID     string `json:"SSID"`
-				Password string `json:"password"`
-			}
-
-			var cred wifiCred
-			err := json.Unmarshal([]byte(s), &cred)
-			if err != nil {
-				log.Errorf("Failed to unmarshal data into wifiCred: %v\n%v\n", err, s)
+			network := wifimanager.ParseWPANetwork(networkStr)
+			if network == nil {
+				log.Errorf("Failed to parse WPA network from:\n%v\n", networkStr)
 				return
 			}
-			wifiInterfaces, err := wifiManager.GetWifiInterfaces()
+			err = wifiManager.TestConnect(iface, network)
 			if err != nil {
-				log.Errorf("Failed to get wifi interfaces: %v", err)
+				log.Errorf("Failed to connect: %v\n", err)
 				return
+			} else {
+				log.Infoln("Successfully tested connection. Adding it to WPA supplicant conf file")
 			}
-			log.Infof("Testing wifi connection with SSID=%v psk=%v", cred.SSID, cred.Password)
-			for _, iface := range wifiInterfaces {
-				networkStr, err := wifimanager.WPAPassphrase(cred.SSID, cred.Password)
-				if err != nil {
-					log.Errorf("Failed to call wpa_passphrase: %v", err)
-					return
-				}
-				network := wifimanager.ParseWPANetwork(networkStr)
-				if network == nil {
-					log.Errorf("Failed to parse WPA network from:\n%v\n", networkStr)
-					return
-				}
-				err = wifiManager.TestConnect(iface, network)
-				if err != nil {
-					log.Errorf("Failed to connect: %v\n", err)
-					return
-				} else {
-					log.Infoln("Successfully tested connection. Adding it to WPA supplicant conf file")
-				}
-				// Connection succeeded
-				// Update wpa supplicant file
-				wifiManager.Lock()
-				if err = wifiManager.AddNetworkConf(cred.SSID, cred.Password); err != nil {
-					log.Errorf("Failed to add network to WPA supplicant conf: %v\n", err)
-				} else {
-					log.Infoln("Added network info to WPA conf file")
-				}
+			// Connection succeeded
+			// Update wpa supplicant file
+			wifiManager.Lock()
+			if err = wifiManager.AddNetworkConf(cred.SSID, cred.Password); err != nil {
+				log.Errorf("Failed to add network to WPA supplicant conf: %v\n", err)
+			} else {
+				log.Infoln("Added network info to WPA conf file")
+			}
 
-				wifiManager.UpdateKnownSSIDs()
-				wifiManager.Unlock()
-			}
-		})
+			wifiManager.UpdateKnownSSIDs()
+			wifiManager.Unlock()
+		}
 	})
 
 	http.Handle("/socket.io/", io)
