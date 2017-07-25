@@ -77,36 +77,45 @@ func main() {
 			case "started":
 				// WPA supplicant just started. Notify server if configured
 				if strings.Compare(*webserver, "") != 0 {
-					log.Infof("Attempting to inform webserver: %v", *webserver)
-					nm := networkmanager.New()
-					// Wait for IP address
-					time.Sleep(5 * time.Second)
-					data := make(map[string]string)
-					hostname, err := nm.Hostname()
-					if err != nil {
-						log.Errorf("Failed to get hostname: %v", err)
-						return
-					}
-					data["hostname"] = hostname
-					ip, err := nm.IPAddress(*iface)
-					if err != nil {
-						log.Errorf("Failed to get IP address for interface: %v: %v", *iface, err)
-						return
-					}
-					data["ip"] = ip
-					// Try to notify webserver
-					req := gorequest.New()
-					resp, body, errs := req.Post(*webserver).SendMap(data).End()
-					if resp != nil && resp.StatusCode != 200 {
-						log.Errorf("Failed to POST data to webserver: %v (errs: %v)", body, errs)
-						// Force Hostapd since the POST failed
-						log.Infof("Forcing Hostapd since webserver notify failed")
-						smartHotspot.CommandChannel <- smarthotspot.FORCE_HOSTAPD
-					}
-					_ = resp
-					_ = body
-					_ = errs
-
+					go func() {
+						nm := networkmanager.New()
+						for i := 0; i < 10; i++ {
+							if isConnected, err := nm.IsWifiConnected(); err == nil {
+								if isConnected {
+									break
+								}
+							}
+							log.Infof("Waiting for wifi to be connected...")
+							time.Sleep(1 * time.Second)
+						}
+						log.Infof("Attempting to inform webserver: %v", *webserver)
+						// Wait for IP address
+						data := make(map[string]string)
+						hostname, err := nm.Hostname()
+						if err != nil {
+							log.Errorf("Failed to get hostname: %v", err)
+							return
+						}
+						data["hostname"] = hostname
+						ip, err := nm.IPAddress(*iface)
+						if err != nil {
+							log.Errorf("Failed to get IP address for interface: %v: %v", *iface, err)
+							return
+						}
+						data["ip"] = ip
+						// Try to notify webserver
+						req := gorequest.New()
+						resp, body, errs := req.Post(*webserver).SendMap(data).End()
+						if resp != nil && resp.StatusCode != 200 {
+							log.Errorf("Failed to POST data to webserver: %v (errs: %v)", body, errs)
+							// Force Hostapd since the POST failed
+							log.Infof("Forcing Hostapd since webserver notify failed")
+							smartHotspot.CommandChannel <- smarthotspot.FORCE_HOSTAPD
+						}
+						_ = resp
+						_ = body
+						_ = errs
+					}()
 				}
 			case "stopped":
 			default:
