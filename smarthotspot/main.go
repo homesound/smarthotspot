@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/alecthomas/kingpin"
-	stoppablenetlistener "github.com/gurupras/go-stoppablenetlistener"
+	stoppablenetlistener "github.com/gurupras/go-stoppable-net-listener"
 	networkmanager "github.com/homesound/go-networkmanager"
 	"github.com/homesound/smarthotspot"
 	"github.com/homesound/wifimanager"
