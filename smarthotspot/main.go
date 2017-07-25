@@ -123,6 +123,7 @@ func main() {
 							_ = resp
 							_ = body
 							_ = errs
+							time.Sleep(1 * time.Second)
 						}
 						if !success {
 							// Force Hostapd since the POST failed
