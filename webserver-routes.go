@@ -60,7 +60,7 @@ func SetupRoutes(path string, wifiManager *wifimanager.WifiManager, io *socketio
 
 			type ifaceResult struct {
 				Interface   string                            `json:"interface"`
-				ScanResults []*network_manager.WifiScanResult `json:"scanResults"`
+				ScanResults []*networkmanager.WifiScanResult `json:"scanResults"`
 			}
 
 			results := make([]*ifaceResult, 0)
