@@ -20,7 +20,7 @@ var (
 	wpaConfPath = app.Flag("wpa-conf", "Path to wpa_supplicant configuration file").Short('w').Default("/etc/wpa_supplicant/wpa_supplicant.conf").String()
 	serverPath  = app.Flag("server-path", "Path to webserver files").Short('s').Default("/www/smarthotspot").String()
 	port        = app.Flag("port", "Port to start webserver on").Short('p').Default("80").Int()
-	webserver   = app.Flag("webserver", "Webserver to notify").Short('w').String()
+	webserver   = app.Flag("webserver", "Webserver to notify").Short('W').String()
 	verbose     = app.Flag("verbose", "Enable verbose messages").Short('v').Default("false").Bool()
 )
 
@@ -88,11 +88,16 @@ func main() {
 					// Try to notify webserver
 					req := gorequest.New()
 					resp, body, errs := req.Post(*webserver).SendMap(data).End()
-					if resp.StatusCode != 200 {
-						log.Errorf("Failed to POST data to webserver: %v (errs: %v)", body, errs)
-						// Force Hostapd since the POST failed
-						smartHotspot.CommandChannel <- smarthotspot.FORCE_HOSTAPD
-					}
+					/*
+						if resp.StatusCode != 200 {
+							log.Errorf("Failed to POST data to webserver: %v (errs: %v)", body, errs)
+							// Force Hostapd since the POST failed
+							smartHotspot.CommandChannel <- smarthotspot.FORCE_HOSTAPD
+						}
+					*/
+					_ = resp
+					_ = body
+					_ = errs
 
 				}
 			case "stopped":
