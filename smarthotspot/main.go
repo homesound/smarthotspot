@@ -112,6 +112,7 @@ func main() {
 							if (resp != nil && resp.StatusCode != 200) || len(errs) > 0 {
 								log.Errorf("Failed to POST data to webserver: %v (errs: %v)", body, errs)
 							} else if resp != nil && resp.StatusCode == 200 {
+								success = true
 								break
 							}
 							_ = resp
