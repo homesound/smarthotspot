@@ -106,7 +106,7 @@ func main() {
 						// Try to notify webserver
 						req := gorequest.New()
 						resp, body, errs := req.Post(*webserver).SendMap(data).End()
-						if resp != nil && resp.StatusCode != 200 {
+						if (resp != nil && resp.StatusCode != 200) || len(errs) > 0 {
 							log.Errorf("Failed to POST data to webserver: %v (errs: %v)", body, errs)
 							// Force Hostapd since the POST failed
 							log.Infof("Forcing Hostapd since webserver notify failed")
