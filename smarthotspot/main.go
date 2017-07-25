@@ -3,11 +3,14 @@ package main
 import (
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/alecthomas/kingpin"
-	"github.com/gurupras/go-stoppable-net-listener"
+	stoppablenetlistener "github.com/gurupras/go-stoppablenetlistener"
+	networkmanager "github.com/homesound/go-networkmanager"
 	"github.com/homesound/smarthotspot"
 	"github.com/homesound/wifimanager"
+	"github.com/parnurzeal/gorequest"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -17,6 +20,7 @@ var (
 	wpaConfPath = app.Flag("wpa-conf", "Path to wpa_supplicant configuration file").Short('w').Default("/etc/wpa_supplicant/wpa_supplicant.conf").String()
 	serverPath  = app.Flag("server-path", "Path to webserver files").Short('s').Default("/www/smarthotspot").String()
 	port        = app.Flag("port", "Port to start webserver on").Short('p').Default("80").Int()
+	webserver   = app.Flag("webserver", "Webserver to notify").Short('w').String()
 	verbose     = app.Flag("verbose", "Enable verbose messages").Short('v').Default("false").Bool()
 )
 
@@ -65,6 +69,32 @@ func main() {
 			message := data.(string)
 			switch message {
 			case "started":
+				// WPA supplicant just started. Notify server if configured
+				if strings.Compare(*webserver, "") != 0 {
+					data := make(map[string]string)
+					nm := networkmanager.New()
+					hostname, err := nm.Hostname()
+					if err != nil {
+						log.Errorf("Failed to get hostname: %v", err)
+						return
+					}
+					data["hostname"] = hostname
+					ip, err := nm.IPAddress(*iface)
+					if err != nil {
+						log.Errorf("Failed to get IP address for interface: %v: %v", *iface, err)
+						return
+					}
+					data["ip"] = ip
+					// Try to notify webserver
+					req := gorequest.New()
+					resp, body, errs := req.Post(*webserver).SendMap(data).End()
+					if resp.StatusCode != 200 {
+						log.Errorf("Failed to POST data to webserver: %v (errs: %v)", body, errs)
+						// Force Hostapd since the POST failed
+						smartHotspot.CommandChannel <- smarthotspot.FORCE_HOSTAPD
+					}
+
+				}
 			case "stopped":
 			default:
 				log.Errorf("Unknown WPASupplicant message: %v", message)
