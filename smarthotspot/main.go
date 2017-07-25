@@ -78,6 +78,7 @@ func main() {
 				// WPA supplicant just started. Notify server if configured
 				if strings.Compare(*webserver, "") != 0 {
 					go func() {
+						time.Sleep(10 * time.Second)
 						nm := networkmanager.New()
 						for i := 0; i < 10; i++ {
 							if isConnected, err := nm.IsWifiConnected(); err == nil {
