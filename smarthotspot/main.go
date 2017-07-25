@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/alecthomas/kingpin"
 	stoppablenetlistener "github.com/gurupras/go-stoppable-net-listener"
@@ -77,8 +78,10 @@ func main() {
 				// WPA supplicant just started. Notify server if configured
 				if strings.Compare(*webserver, "") != 0 {
 					log.Infof("Attempting to inform webserver: %v", *webserver)
-					data := make(map[string]string)
 					nm := networkmanager.New()
+					// Wait for IP address
+					time.Sleep(5 * time.Second)
+					data := make(map[string]string)
 					hostname, err := nm.Hostname()
 					if err != nil {
 						log.Errorf("Failed to get hostname: %v", err)
@@ -94,13 +97,12 @@ func main() {
 					// Try to notify webserver
 					req := gorequest.New()
 					resp, body, errs := req.Post(*webserver).SendMap(data).End()
-					/*
-						if resp.StatusCode != 200 {
-							log.Errorf("Failed to POST data to webserver: %v (errs: %v)", body, errs)
-							// Force Hostapd since the POST failed
-							smartHotspot.CommandChannel <- smarthotspot.FORCE_HOSTAPD
-						}
-					*/
+					if resp != nil && resp.StatusCode != 200 {
+						log.Errorf("Failed to POST data to webserver: %v (errs: %v)", body, errs)
+						// Force Hostapd since the POST failed
+						log.Infof("Forcing Hostapd since webserver notify failed")
+						smartHotspot.CommandChannel <- smarthotspot.FORCE_HOSTAPD
+					}
 					_ = resp
 					_ = body
 					_ = errs
