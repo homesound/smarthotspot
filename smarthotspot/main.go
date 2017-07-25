@@ -100,6 +100,11 @@ func main() {
 								return
 							}
 							data["hostname"] = hostname
+							data["ssid"], err = wifiManager.CurrentSSID(*iface)
+							if err != nil {
+								log.Errorf("Failed to get current SSID: %v", err)
+								return
+							}
 							ip, err := nm.IPAddress(*iface)
 							if err != nil {
 								log.Errorf("Failed to get IP address for interface: %v: %v", *iface, err)
