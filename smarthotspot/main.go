@@ -76,6 +76,7 @@ func main() {
 			case "started":
 				// WPA supplicant just started. Notify server if configured
 				if strings.Compare(*webserver, "") != 0 {
+					log.Infof("Attempting to inform webserver: %v", *webserver)
 					data := make(map[string]string)
 					nm := networkmanager.New()
 					hostname, err := nm.Hostname()
