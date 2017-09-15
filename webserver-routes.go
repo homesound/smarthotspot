@@ -6,9 +6,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/googollee/go-socket.io"
 	"github.com/gorilla/mux"
 	"github.com/homesound/go-networkmanager"
+	"github.com/homesound/simple-websockets"
 	"github.com/homesound/wifimanager"
 	log "github.com/sirupsen/logrus"
 )
@@ -25,7 +25,7 @@ func WifiHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, filePath)
 }
 
-func SetupRoutes(path string, wifiManager *wifimanager.WifiManager, io *socketio.Server) http.Handler {
+func SetupRoutes(path string, wifiManager *wifimanager.WifiManager, ws *websockets.WebsocketServer) http.Handler {
 	if strings.Compare(path, "") == 0 {
 		path = "."
 	}
@@ -35,21 +35,11 @@ func SetupRoutes(path string, wifiManager *wifimanager.WifiManager, io *socketio
 	r.HandleFunc("/", WifiHandler)
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(staticPath))))
 
-	var err error
-	if io == nil {
+	if ws == nil {
 		// Set up the socket.io server
-		io, err = socketio.NewServer(nil)
-		if err != nil {
-			log.Fatalf("Failed to start socket.io server: %v\n", err)
-		}
+		ws = websockets.NewServer(r)
 	}
-	io.OnConnect("/", func(s socketio.Conn) error {
-		log.Debugf("Received connection")
-		s.SetContext("")
-		return nil
-	})
-
-	io.OnEvent("/", "wifi-scan", func(so socketio.Conn, msg string) {
+	ws.On("wifi-scan", func(w *websockets.WebsocketClient, msg []byte) {
 		log.Infoln("/wifi-scan")
 		ifaces, err := wifiManager.GetWifiInterfaces()
 		if err != nil {
@@ -77,11 +67,11 @@ func SetupRoutes(path string, wifiManager *wifimanager.WifiManager, io *socketio
 		if err != nil {
 			log.Errorf("Failed to marshal scan results: %v\n", err)
 		}
-		so.Emit("wifi-scan-results", string(b))
+		w.Emit("wifi-scan-results", b)
 		//fmt.Printf("Sending back results:\n%v\n", string(b))
 	})
 
-	io.OnEvent("/", "wifi-connect", func(so socketio.Conn, s string) {
+	ws.On("wifi-connect", func(w *websockets.WebsocketClient, msg []byte) {
 		log.Infoln("/wifi-connect")
 		type wifiCred struct {
 			SSID     string `json:"SSID"`
@@ -89,9 +79,9 @@ func SetupRoutes(path string, wifiManager *wifimanager.WifiManager, io *socketio
 		}
 
 		var cred wifiCred
-		err := json.Unmarshal([]byte(s), &cred)
+		err := json.Unmarshal(msg, &cred)
 		if err != nil {
-			log.Errorf("Failed to unmarshal data into wifiCred: %v\n%v\n", err, s)
+			log.Errorf("Failed to unmarshal data into wifiCred: %v\n%v\n", err, string(msg))
 			return
 		}
 		wifiInterfaces, err := wifiManager.GetWifiInterfaces()
@@ -132,6 +122,5 @@ func SetupRoutes(path string, wifiManager *wifimanager.WifiManager, io *socketio
 		}
 	})
 
-	http.Handle("/socket.io/", io)
 	return r
 }
