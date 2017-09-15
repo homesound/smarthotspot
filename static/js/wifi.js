@@ -17,7 +17,7 @@ window.onload = function() {
 	socket.emit('wifi-status');
 
 	socket.on('wifi-scan-results', function(msg) {
-		console.log("Received scan results")
+		console.log("Received scan results: " + JSON.stringify(msg))
 		function __addScanResult(entry) {
 			var html = '<li class="collection-item" data-interface="' + entry.interface + '" data-data-ssid="' + entry.SSID + '">' + entry.SSID + '</li>';
 			var el = $($.parseHTML(html));
