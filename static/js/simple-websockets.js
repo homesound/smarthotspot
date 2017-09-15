@@ -57,7 +57,7 @@
 			}
 			data[WS_EVENT_KEY] = evt;
 			data = JSON.stringify(data);
-			ws.send(data);
+			ret._websocket.send(data);
 		}
 		return ret;
 	}
