@@ -4,7 +4,7 @@ window.onload = function() {
 	$(".button-collapse").sideNav();
 
 
-	socket = io.connect();
+	socket = SimpleWebSocket.connect();
 
 	// Check connectivity status
 	// If we're running hotspot, then we show the wi-fi page

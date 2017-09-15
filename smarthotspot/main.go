@@ -114,7 +114,7 @@ func main() {
 							data["ip"] = ip
 							// Try to notify webserver
 							req := gorequest.New()
-							resp, body, errs := req.Post(*webserver).SendMap(data).End()
+							resp, body, errs := req.Post(*webserver).Send(data).End()
 							if (resp != nil && resp.StatusCode != 200) || len(errs) > 0 {
 								log.Errorf("Failed to POST data to webserver: %v (errs: %v)", body, errs)
 							} else if resp != nil && resp.StatusCode == 200 {
