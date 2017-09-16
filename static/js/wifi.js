@@ -48,7 +48,7 @@ window.onload = function() {
 			payload.password = $('#wifi-password').val();
 
 			console.log("Issuing wifi-connect event")
-			socket.emit('wifi-connect', JSON.stringify(payload));
+			socket.emit('wifi-connect', payload);
 		});
 
 		socket.emit('wifi-scan');
