@@ -39,7 +39,7 @@ func SetupRoutes(path string, wifiManager *wifimanager.WifiManager, ws *websocke
 		// Set up the socket.io server
 		ws = websockets.NewServer(r)
 	}
-	ws.On("wifi-scan", func(w *websockets.WebsocketClient, msg []byte) {
+	ws.On("wifi-scan", func(w *websockets.WebsocketClient, data interface{}) {
 		log.Infoln("/wifi-scan")
 		ifaces, err := wifiManager.GetWifiInterfaces()
 		if err != nil {
@@ -71,17 +71,17 @@ func SetupRoutes(path string, wifiManager *wifimanager.WifiManager, ws *websocke
 		//fmt.Printf("Sending back results:\n%v\n", string(b))
 	})
 
-	ws.On("wifi-connect", func(w *websockets.WebsocketClient, msg []byte) {
+	ws.On("wifi-connect", func(w *websockets.WebsocketClient, data interface{}) {
 		log.Infoln("/wifi-connect")
 		type wifiCred struct {
 			SSID     string `json:"SSID"`
 			Password string `json:"password"`
 		}
-
+		b, _ := json.Marshal(data)
 		var cred wifiCred
-		err := json.Unmarshal(msg, &cred)
+		err := json.Unmarshal(b, &cred)
 		if err != nil {
-			log.Errorf("Failed to unmarshal data into wifiCred: %v\n%v\n", err, string(msg))
+			log.Errorf("Failed to unmarshal data into wifiCred: %v\n%v\n", err, string(b))
 			return
 		}
 		wifiInterfaces, err := wifiManager.GetWifiInterfaces()
