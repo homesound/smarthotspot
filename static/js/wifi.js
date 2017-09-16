@@ -27,7 +27,7 @@ window.onload = function() {
 
 			$('#wifi-scan-results').empty();
 
-			var json = JSON.parse(msg);
+			var json = JSON.parse(JSON.stringify(msg));
 			for(var i = 0; i < json.length; i++) {
 				var entry = json[i];
 				for(var j = 0; j < entry.scanResults.length; j++) {
