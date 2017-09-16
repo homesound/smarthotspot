@@ -1,8 +1,4 @@
 (function() {
-	const WS_EVENT_KEY          = "_ws_event"
-	const WS_TYPE_KEY           = "_ws_type"
-	const WS_STRING_MESSAGE_KEY = "_ws_type_string"
-
 	function print(msg) {
 		console.log('[ws]: ' + msg);
 	}
@@ -11,9 +7,13 @@
 		if(!addr) {
 			addr = 'ws://' + window.location.host + "/ws";
 		}
+
 		var ret = {};
+
 		var ws = new WebSocket(addr);
-		ret._websocket = ws;
+		// Set up binary type for msgpack ease-of-use
+		ws.binaryType = 'arraybuffer';
+
 		ws.onopen = function(evt) {
 			print("OPEN");
 		}
@@ -22,21 +22,11 @@
 			ws = null;
 		}
 		ws.onmessage = function(evt) {
-			print("Received message: " + evt.data);
-			var json = JSON.parse(evt.data);
-			var data;
-			if(json[WS_TYPE_KEY]) {
-				data = json[json[WS_TYPE_KEY]];
-			} else {
-				data = json;
-			}
-			var evt = json[WS_EVENT_KEY];
-			if(!evt) {
-				// Do nothing
-				return;
-			}
-			print('Message: ' + data);
-			$(ret).trigger(evt, data);
+			debugger;
+			var rawBinary = new Uint8Array(evt.data);
+			var msg = msgpack.decode(rawBinary);
+			print('Message: ' + msg.data);
+			$(ret).trigger(msg.event, msg.data);
 		}
 		ws.onerror = function(evt) {
 			print("ERROR: " + evt.data);
@@ -49,16 +39,15 @@
 		}
 
 		ret.emit = function(evt, data) {
-			if(!data) {
-				data = {};
-			}
-			if(typeof data === 'object') {
-				data = JSON.parse(JSON.stringify(data));
-			}
-			data[WS_EVENT_KEY] = evt;
-			data = JSON.stringify(data);
-			ret._websocket.send(data);
+			var msg = {
+				event: evt,
+				data: data,
+			};
+			var bytes = msgpack.encode(msg);
+			ret._websocket.send(bytes);
 		}
+
+		ret._websocket = ws;
 		return ret;
 	}
 
