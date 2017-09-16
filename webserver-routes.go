@@ -63,11 +63,7 @@ func SetupRoutes(path string, wifiManager *wifimanager.WifiManager, ws *websocke
 			results = append(results, res)
 		}
 
-		b, err := json.Marshal(results)
-		if err != nil {
-			log.Errorf("Failed to marshal scan results: %v\n", err)
-		}
-		w.Emit("wifi-scan-results", b)
+		w.Emit("wifi-scan-results", results)
 		//fmt.Printf("Sending back results:\n%v\n", string(b))
 	})
 
