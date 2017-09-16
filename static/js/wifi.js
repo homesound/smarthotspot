@@ -28,12 +28,10 @@ window.onload = function() {
 			$('#wifi-scan-results').empty();
 
 			var json = JSON.parse(JSON.stringify(msg));
-			for(var i = 0; i < json.length; i++) {
-				var entry = json[i];
-				for(var j = 0; j < entry.scanResults.length; j++) {
-					entry.scanResults[j].interface = entry.interface;
-					__addScanResult(entry.scanResults[j]);
-				}
+			for(var i = 0; i < json.scanResults.length; i++) {
+				var entry = json.scanResults[i];
+				entry.interface = json.interface;
+				__addScanResult(entry);
 			}
 			$('#wifi-scan-trigger').toggleClass("disabled", false);
 		});
