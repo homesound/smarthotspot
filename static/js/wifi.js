@@ -4,7 +4,7 @@ window.onload = function() {
 	$(".button-collapse").sideNav();
 
 
-	socket = SimpleWebSocket.connect();
+	socket = new SimpleWebSocket();
 	socket.onopen = function() {
 		// Check connectivity status
 		// If we're running hotspot, then we show the wi-fi page
@@ -55,6 +55,7 @@ window.onload = function() {
 
 		socket.emit('wifi-scan');
 	}
+	socket.connect();
 }
 
 
