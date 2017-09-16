@@ -14,8 +14,6 @@ window.onload = function() {
 		}
 	});
 
-	socket.emit('wifi-status');
-
 	socket.on('wifi-scan-results', function(msg) {
 		console.log("Received scan results: " + JSON.stringify(msg))
 		function __addScanResult(entry) {
@@ -40,8 +38,6 @@ window.onload = function() {
 		$('#wifi-scan-trigger').toggleClass("disabled", false);
 	});
 
-	socket.emit('wifi-scan');
-
 	$('#wifi-scan-trigger').on('click', function() {
 		$(this).toggleClass("disabled");
 		socket.emit('wifi-scan', "{}")
@@ -56,6 +52,9 @@ window.onload = function() {
 		console.log("Issuing wifi-connect event")
 		socket.emit('wifi-connect', JSON.stringify(payload));
 	});
+
+	socket.emit('wifi-scan');
+
 }
 
 
