@@ -13,23 +13,16 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-var staticPath string
-
-func IndexHandler(w http.ResponseWriter, r *http.Request) {
-	filePath := filepath.Join(staticPath, "html", "index.html")
-	http.ServeFile(w, r, filePath)
-}
-
-func WifiHandler(w http.ResponseWriter, r *http.Request) {
-	filePath := filepath.Join(staticPath, "html", "wifi-configuration.html")
-	http.ServeFile(w, r, filePath)
-}
-
 func SetupRoutes(path string, wifiManager *wifimanager.WifiManager, ws *websockets.WebsocketServer) http.Handler {
 	if strings.Compare(path, "") == 0 {
 		path = "."
 	}
-	staticPath = filepath.Join(path, "static")
+	staticPath := filepath.Join(path, "static")
+
+	WifiHandler := func(w http.ResponseWriter, r *http.Request) {
+		filePath := filepath.Join(staticPath, "html", "wifi-configuration.html")
+		http.ServeFile(w, r, filePath)
+	}
 
 	r := mux.NewRouter()
 	r.HandleFunc("/", WifiHandler)
